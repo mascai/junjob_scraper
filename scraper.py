@@ -24,16 +24,16 @@ class Vacancy:
         
     def __str__(self):
         return "{};{};{};{};{}".format(self.name, self.salary, self.company_name, self.city, self.link)
-    
-    def get_page_url(id):
+
+
+def get_page_url(id):
     if id == 1:
         page_url = URL
     else:
         page_url = URL + "/?vacancy=" + str(id)
     print(page_url)
-    return page_url
-        
-        
+    return page_url   
+   
     
 def parse_page_to_links(html):
     ''' Returns list of links to vacancies '''
