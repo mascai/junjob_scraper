@@ -91,3 +91,8 @@ def create_user(user_name, df):
 
 res = create_user("alekmosk", df)
 print(res)
+
+# create DataFrame
+col_names =  ['Name', 'Click_vacancy', 'Click_paginate', 'Click_search', 'Click_contact', 'Avg_time_on_vacancy', 'Avg_time_on_action']
+res_df  = pd.DataFrame(columns = col_names)
+res_df.loc[0] = res.to_list()
