@@ -1,9 +1,8 @@
 import pandas as pd
 import datetime, time
 
+df = pd.read_csv("data/user_logs.csv", sep=";")
 
-df = pd.read_csv("data/user_logs.csv", sep=",")
-df.head()
 
 class User:
     def __init__(self, name, login_time, end_time, click_vacancy, click_paginate, click_search, click_contact, time_on_page):
@@ -20,6 +19,9 @@ class User:
         return "{};{};{};{};{};{};{}".format(
             self.name, self.login_time, self.end_time, self.click_vacancy, self.click_paginate, self.click_search, self.click_contact, self.time_on_page)
     
+    def to_list(self):
+        return [self.name, self.click_vacancy, self.click_paginate, self.click_search, self.click_contact, self.avg_time_on_vacancy(), self.avg_time_on_action()]
+    
     def print(self):
         return """name {}, 
 login_time {}, 
@@ -29,7 +31,7 @@ click_paginate {},
 click_search {},
 click_contact {},
 time_on_page {}
-------------------Functions----
+----Functions----
 time_delta {}
 avg_time_on_vacancy {}
 avg_time_on_action {}
@@ -47,11 +49,13 @@ avg_time_on_action {}
         return self.time_on_page / self.click_vacancy
     
     def avg_time_on_action(self):
-        return (self.click_vacancy + self.click_paginate + self.click_search + self.click_contact) / self.time_delta()
+        return self.time_delta() / (self.click_vacancy + self.click_paginate + self.click_search + self.click_contact)
         
         
+
 def str_to_time(s):
-    return datetime.datetime.strptime(str(s), "%Y-%m-%d %H:%M:%S")   
+    return datetime.datetime.strptime(str(s), "%Y-%m-%d %H:%M:%S")
+    
     
 def create_user(user_name, df):
     df1 = df[df["User"] == user_name]
@@ -89,10 +93,37 @@ def create_user(user_name, df):
 
         
 
-res = create_user("alekmosk", df)
-print(res)
+res_admin = create_user("admin", df)
+res_virus1 = create_user("virus1", df)
+print(res_admin.print())
+print(res_virus1.print())
 
-# create DataFrame
-col_names =  ['Name', 'Click_vacancy', 'Click_paginate', 'Click_search', 'Click_contact', 'Avg_time_on_vacancy', 'Avg_time_on_action']
-res_df  = pd.DataFrame(columns = col_names)
-res_df.loc[0] = res.to_list()
+
+''' RESULT
+name admin, 
+login_time 2020-02-05 00:12:27, 
+end_time 2020-02-05 00:13:43, 
+click_vacancy 12, 
+click_paginate 2, 
+click_search 0,
+click_contact 0,
+time_on_page 37
+----Functions----
+time_delta 76
+avg_time_on_vacancy 3.0833333333333335
+avg_time_on_action 5.428571428571429
+
+name virus1, 
+login_time 2020-02-05 00:14:57, 
+end_time 2020-02-05 00:15:07, 
+click_vacancy 14, 
+click_paginate 3, 
+click_search 0,
+click_contact 0,
+time_on_page 7
+----Functions----
+time_delta 10
+avg_time_on_vacancy 0.5
+avg_time_on_action 0.5882352941176471
+
+'''
