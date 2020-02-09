@@ -2,10 +2,33 @@ import pandas as pd
 import datetime, time
 
 df = pd.read_csv("data/user_logs.csv", sep=";")
+RES_FILE = "/home/alex/Education/6/cmc/diploma/Notebooks/data/res.csv"
+
+df = pd.read_csv("data/user_logs.csv", sep=";")
+
+def append_to_file(user, file):
+    col_names =  ['Name', 'Total_time','Click_vacancy', 'Click_paginate', 'Click_search', 'Click_contact', 'Avg_time_on_vacancy', 'Avg_time_on_action', "Consecutive_num"]
+    print("111: ", len(col_names))
+    print("222: ", len(user.to_list()))
+    if os.path.isfile(file) == 0:
+        col_names =  ['Name', 'Total_time','Click_vacancy', 'Click_paginate', 'Click_search', 'Click_contact', 'Avg_time_on_vacancy', 'Avg_time_on_action', "Consecutive_num"]
+        df  = pd.DataFrame(columns = col_names)
+        
+        df.to_csv(file, sep=";")
+        
+    df = pd.read_csv(file, sep=";")
+    a_series = pd.Series(user.to_list(), index = col_names)
+    df = df.append(a_series, ignore_index=True)
+    
+    df.to_csv(file, sep=";", index=False)
+      
+    
+    
+    
 
 
 class User:
-    def __init__(self, name, login_time, end_time, click_vacancy, click_paginate, click_search, click_contact, time_on_page):
+    def __init__(self, name, login_time, end_time, click_vacancy, click_paginate, click_search, click_contact, time_on_page, consecutive_num):
         self.name = name
         self.login_time = login_time
         self.end_time = end_time 
@@ -14,13 +37,14 @@ class User:
         self.click_search = click_search # number of clicks on search button
         self.click_contact = click_contact
         self.time_on_page = time_on_page # number of seconds that user was on the vacancy page
+        self.consecutive_num = consecutive_num # number of consecutive vacancy open
     
     def __str__(self):
         return "{};{};{};{};{};{};{}".format(
             self.name, self.login_time, self.end_time, self.click_vacancy, self.click_paginate, self.click_search, self.click_contact, self.time_on_page)
     
     def to_list(self):
-        return [self.name, self.click_vacancy, self.click_paginate, self.click_search, self.click_contact, self.avg_time_on_vacancy(), self.avg_time_on_action()]
+        return [self.name, self.time_delta(), self.click_vacancy, self.click_paginate, self.click_search, self.click_contact, self.avg_time_on_vacancy(), self.avg_time_on_action(), self.consecutive_num]
     
     def print(self):
         return """name {}, 
@@ -31,13 +55,14 @@ click_paginate {},
 click_search {},
 click_contact {},
 time_on_page {}
+consecutive_num {}
 ----Functions----
 time_delta {}
 avg_time_on_vacancy {}
 avg_time_on_action {}
 """.format(
             self.name, self.login_time, self.end_time, self.click_vacancy, self.click_paginate, self.click_search, 
-            self.click_contact, self.time_on_page, self.time_delta(), self.avg_time_on_vacancy(), self.avg_time_on_action())
+            self.click_contact, self.time_on_page, self.consecutive_num, self.time_delta(), self.avg_time_on_vacancy(), self.avg_time_on_action())
         
     
     def time_delta(self):
@@ -64,6 +89,8 @@ def create_user(user_name, df):
     click_paginate = 0
     click_search = 0
     click_contact = 0
+    max_consecutive_num = 0
+    cur_consecutive_num = 0
     is_first = True
     
     prev = None
@@ -78,6 +105,12 @@ def create_user(user_name, df):
             click_vacancy += 1
             if prev[1]["Action"] == "VACANCY":
                 time_on_page += (str_to_time(row[1]["Time"]) -  str_to_time(prev[1]["Time"])).seconds
+                if int(prev[1]["Data1"]) == int(row[1]["Data1"]) + 1:
+                    cur_consecutive_num += 1
+                    max_consecutive_num = max(max_consecutive_num, cur_consecutive_num)
+                else:
+                    cur_consecutive_num = 1
+                    
         elif row[1]["Action"] == "PAGINATE":
             click_paginate += 1
         elif row[1]["Action"] == "SEARCH":
@@ -88,7 +121,7 @@ def create_user(user_name, df):
         end_time = row[1]["Time"]
         prev = row
     
-    return User(user_name, login_time, end_time, click_vacancy, click_paginate, click_search, click_contact, time_on_page)
+    return User(user_name, login_time, end_time, click_vacancy, click_paginate, click_search, click_contact, time_on_page, max_consecutive_num)
 
 
         
@@ -98,32 +131,4 @@ res_virus1 = create_user("virus1", df)
 print(res_admin.print())
 print(res_virus1.print())
 
-
-''' RESULT
-name admin, 
-login_time 2020-02-05 00:12:27, 
-end_time 2020-02-05 00:13:43, 
-click_vacancy 12, 
-click_paginate 2, 
-click_search 0,
-click_contact 0,
-time_on_page 37
-----Functions----
-time_delta 76
-avg_time_on_vacancy 3.0833333333333335
-avg_time_on_action 5.428571428571429
-
-name virus1, 
-login_time 2020-02-05 00:14:57, 
-end_time 2020-02-05 00:15:07, 
-click_vacancy 14, 
-click_paginate 3, 
-click_search 0,
-click_contact 0,
-time_on_page 7
-----Functions----
-time_delta 10
-avg_time_on_vacancy 0.5
-avg_time_on_action 0.5882352941176471
-
-'''
+append_to_file(res_virus1, RES_FILE)
